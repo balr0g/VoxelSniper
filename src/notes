@@ -1,0 +1,187 @@
+﻿
+                                    _________---------- I Began documenting the classes, vSniper and Brush now have JavaDocs ----------_________
+                                                        
+
+To do for brushes already in vBrushes.class:
+Coast: lots.
+Erode: Water as a nonsolid is not working right now.  Not sure why, looking at the code.  But it won't erode next to water and fill still fills in water.
+Freeze ray: has been broken since trying to add sigmoid and other stuff.  Look into.
+Exclusion and Inclusion brushes or edits of existing brushes, respectively
+
+####Other ideas####
+1) Not my idea, but everybody wants to be able to set a list of blocks to replace all at once, so like /vr 5,7,17,8 etc.  OR /vre (exclusive) 3,1,8 which replaces every type of block except those.
+2) Offsets.  Type /off 5,-6,7 and when you click, it will act as if you had clicked whatever brush you have in the same spot, but +5X -6Y +7Z away.  For conveniently sniping places you can't see, like the middle of a mountain, or in mid air where you would have to otherwise build a scaffold to be able to hit the right location.  Might want to make the user input a bit friendlier by putting it in terms of up,down,north,south,east,west
+3) A parabola brush - Input "half or full" block style, "extends up or down" then the length and the width.  Click in the apex of where you want the parabola, and it will auto-fill in half and/or double steps in a parabola for you.  Works like the face disc, so it can be oriented any way.
+4) A river brush?  Just a crazy thought...  --> this would be a really nice brush to have I can imagine having a version that simply does what smoothSelection would do, but more random and river'ish and another where you select three or 4 points and it follows a curve between them to auto-generate a river by the rules of the first brush -- prz
+5) A desert painting brush? --> we can do this by replacing grass to sand ;p   -- prz
+6) A random brush? - A disk or ball that would generate a noise map and pull/push blocks in its radius up/down/up&down. Noise scale and strength? - DR --> Why? -- prz
+7) jump brush
+8) tree generation brush
+9) dowsing brush - tells you if there is some type of material directly in a line from the block face you clicked (most typically would be searching for air for caves)
+    --> On it. Named it Scanner.java -- DR
+10) A /vir [#] command, to replace objects with a certain data value. Should probably be used in conjunction with /vr. Being able to change these blocks with /v or /vi would be nice.
+
+
+####River brush thoughts####
+So instead of putting in waypoints as the only control, I was thinking a river brush should be more emergent and naturally determined.
+Something like you just click the source, and it will find the path of least resistance on its own to the sea, eroding
+away the least amount possible to get there.  Then once it has that path, it digs it out downward (more so as it gets longer), and fills
+in with water. After each dig iteration, it searches the path again to make sure there isn't a better one, at which point it would take
+that instead. You might still want a version with more control, at the cost of looking more artificial.
+Waypoints could be the arrow version and this could be gunpowder, or something? - GJ
+
+Based on chat earlier: -GJ
+1) Start at source.  Look outward until elevation drops.
+2) Mark that point as the next node.  Look outward again until elevation drops, etc.
+3) if at any point elevation never drops in any direction (you entered a valley), look out until you hit something in all directions, then go up one and look out again along same paths.  Repeat until something does go down.  This is (the simplified) path of least resistance.
+4) Calculate how much water it would take to fill that whole valley.  If smaller than the allowed ceiling on lake size (parameter), fill it, and continue on from that point of least resistance you found in #3.
+    if larger than the allowed ceiling on lake size, don't fill the lake at all.  Just erode the land at that point you found in #3 and check again, until either the lake becomes small enough or until there is just a direct path that way (i.e. the whole obstacle has been eroded away)
+5) Once you get to the sea in this fashion, form a bezier curve connecting all those nodes you found.  If you don't get to the sea before the river length ceiling is hit (parameter), abort and return to the user the XYZ position where you aborted, so they can manuallyd etermine whether to increase their river length or to choose a new source, or to landscape, or whatever.
+6) Rasterize the curve in terms of minecraft blocks, and perform a simulated (in program, not in game just yet) ball brush air at every point along that curve.  Radius of ball brush can increase as you go, to simulate the river getting larger from small tributaries.
+7) Start back at the source and retrace, to verify path of river.  Sometimes, the trench you made in #6 will open up a new path of lesser resistance (this happens in real life, as rivers erode they break into new valleys and change course), and you will have to adjust the path.
+8) Once you get consistent results with no more course changes, actually dig out the requisite trench in game.
+9) Somehow fill in the curvy trench you just made with water, part-way up.  This is the hardest part, in my opinion.  You would have to add lines of stationary water tangent to the curve or something complicated.
+Ta da!  river.
+Also: can include memory overflow danger checks that can abort this monstrous brush in the middle if it is getting too close to crashing the server?  No blocks are actually changed until the end, so it wouldn't mess up your undo.
+
+
+####Gavin's other plugin ideas####
+2) A "gunpowder paintbrush."  The paintbrush right now is a nerfed sniper arrow.  But we could also use a nerfed sniper gunpowder.  Left click grabs an ink, rght click places a NEW block of that type within normal human range.
+        --> Need to discuss this, since it allows for very easy griefing. Changing blocks is one thing, but filling someones house to the brim with the same blocks he uses for his build is another. -- DR
+*3) Make the factory showroom built into each player / make it a virtual "store."  Just type some command and it brings you to a menu of all block types.  Click the ones you want, put in your cart, and then deliver them to your inventory directly, without traveling anywhere.
+        -->  I have heard that we are now able to throw an inventory screen like a chest at a player whenever we want, so this would be a really nice idea to try out -- prz
+        --> If we we indeed get access to virtual chests, then we could hook it up to leftclicking an item in said chest inventory. Unless we put them in on click, remove the item from the mouse, 'restart', and use escape to get rid of the screen, this would be one item per popup. -- DR
+5) In concurrence with #4, VoxelMore would just get you up to 64, not give you 64 (so no extra little stack of 3 or whatever).  Essentially, VoxelMore just activates an infini-stack in this framework.
+*6) Personal, overwriting /kits.  Fill up your active toolbar (the 10 items on your mouse scroll wheel) with anything you want.  Type "/setkit [name]" to create a new kit for yourself.
+From now on, any time you type "/k [name]", it will fill up your toolbar with exactly those items (or empty slots) just like it was when you set that kit.  Anything that was in your toolbar at the moment you
+used the "/k" command will be attempted to be fit in the rest of your inventory.  If there is no space, leftovers are destroyed.  This allows you to come up with a pallette for one particular build, like a museum,
+make a museum kit, and whenever you go back to work on that build, instantly bring up exactly what mats and tools you need in the right slots without clicking around in your inventory.
+        --> I like this one a lot! Would you say those kit be personal? or aviable to anyone, say you invite people to build in your town so you tell them to use your pellete of materials. -- prz
+        --> Until we use a permission system, I think this is too dangerous for wide-spread use. We could ofcourse limit the material range available for guests, members and admns. -- DR
+        --> As discussed earlier in chat, the system could be that you set your own personal ones, and if you choose to share the name of them with other people, they access it by /ke (external) or something.
+            so like /ke featherblade museum -- will give you featherblade's museum kit.  Before giving you the items, it can check to see if you fail to have permission for any of them.  A kit with TNT as one of the stacks will be placed in your inventory as normal, but with that one slot that had TNT empty, if you are just a guest, for example.  And it throws an explanatory error message.
+*7) Make it so that right clicking things in your inventory destroys the whole stack.  Left clicking picks up the stack as normal.  Very fast, easy inventory clearing.
+        --> would have to investigate wheter the server differenciated between leftClicking and rightClicking inside the inventory. -- prz
+8) Maybe even keep track of which items the user uses the most, and then have a command like "/sweep" that will clear out the 10 least often used item types (starting with the smallest stacks of them) in the inventory at the moment.
+9) In-house sunmod, specifically one that keeps it day by default but with the option of night, AND ideally allows local time anomalies - you can set your city or region to have time move at a different speed, separate from the global time.
+based on chunks (or 9-chunk bunches), the server will keep track of any custom time regions, and will create gradients of time between them in intervening chunks, so that when traveling, there will be smooth transitions (calculate euclidean distances upon server startup between all relevant chunks, and use info to sync the times up from then on)
+        --> I dont know about this one, but I can tell you that each seperate world we create has its own clock and time -- prz
+10) lighting filters that make all light warmer around sunset and sunrise. (semi-transparent overlay masks over terrain.png, etc.)
+        --> Are we really going into client mods then? I don't like obfuscated code. That's why working with prz's code gives me a headache. -- DR
+11) In-house flymod that doesn't suck...
+        --> I was going to mess around with the Vectors and Velocity settings to see if we could float people from server-side -- prz
+        --> Seeing as this would likely still drop you after every 'tick' you recieve from the server, and reset you on the next 'tick', I can't see this be any different from spazzing out on unloaded chunks. - DR
+12) Paintbrushes that give you more obvious feedbck about what their current ink is set to.  Like a word written on the screen somewhere (possible without client mod?)
+        --> no, not really possible. We can't modofy the HUD from the server.
+
+*13) Type /infitems in your chat, and members + will activate infinite items mode.  Whenever you have only 5 or fewer of something in your inventory in this mode, and place one, instead of going to 4, it goes to 64 (5 is just so that it has a bit of buffer against you placing lots of blocks quickly)
+Makes the dooplicator and voxelmore unnecessary / automated.
+
+
+
+TODO:
+
+
+
+
+
+check out line 118 of parabola for all the awesome stuff it should be able to do. -GJ
+note to self: look into a catenary brush too.  Better for hanging bridges and suspension etc.  Very different equations. (copy paste job though for most of the code).  Best for making large tents, for example, of hanging cloth.
+this is all sort of pointing again toward the idea of super powerful bezier brushes.  But still useful to have the simpler, more standard kinds of curves in user friendly forms by themselves.
+Also, even if we had a bezier brush, you would want to have a mathematically precise way of giving it control points, rather than just by eye.  So it would be ideal to make a series of
+parabolic arches for instance, mapping out cross sections of the surface you want, and then using those as guides to click on for setting your bezier control points.
+(I am prioritizing this over the coast brush for now, since erosion has made that less important somewhat)
+    --> How about adding either via different brush or a parameter a way of drawing Bezier curves with this. Either 3 point or 4 point or bolth.
+            Perhaps even possibility of using more than 4 points.
+            --> Definitely a separate brush, but yes sure.  That would be helpful.  Why not as many points as you like?  Thus, there would be some stereotypical simple curve brushes, and then the bezier curve brush, and then the bezier surface brush, which you would control with a framework of a combination of the others usually, employed as a skeleton.
+                --> mhmm those would be nice. But one thing I can say is that for every extra point the number of calculations is at least doubled, dont remember that exact amount.
+                    Bezier surface could be tricky but if done propperly would lead to the best and most acurate Smoothing brush EVER! -- prz
+                        --> If we can figure out the bezier math, then it might honestly be worth a clientside plugin for heavy calculating brushes.  if 4 points takes 1/20 of a second to calculate, then 20 points should take less than an hour on your own home machine...  Save the result as a file in the plugin folder, and in game, you type /b bezierHeavy [filename], and click a reference point, then it will put in the precalculated curve, which will take the server less than a second or whatever. -GJ
+                            --> For bezier curves its not a super big calculation at least not the 4 point ones. I use the 4 point bezier curve in the SoftSelection  brush
+                                The equation for finding a point along the line of a 4 point bezier curve is this:
+
+                                P = (1-t)^3•P1 + 3•(1-t)^2•t•C1 + 3•(1-t)•t^2•C2 + t^3•P2
+
+                                Where:
+                                't' is the position on the curve, as bezier curves are defined by percentage of treversing so a value between 0 and 1
+                                'P1' is the coordinate of the first point on the line
+                                'C1' and 'C2' are the points in the middle
+                                'P2' is the last point
+                                    ^ these points are either all X or all Y ( or Z I guess )
+
+                                In the end that little bit of multiplication and addition renders a Coordinate on the line at position 't'
+
+                                From SoftSelection.java :  ( I actually compressed that already compressed equation even further here )
+
+                                protected double getStr(double t) {
+                                    double lt = 1 - t;
+                                    return (lt * lt * lt) + 3 * (lt * lt) * t * c1 + 3 * lt * (t * t) * c2;   //  ( this is actually a much compressed version because I had a
+                                    // double Ay = 1 + (t * (c1 - 1));                                        //    variable that was always a 0 so there was no sense in
+                                    // double By = c1 + (t * (c2 - c1));                                      //    multiplying anything by it as it would equal 0 anyway )
+                                    // double Cy = c2 + (t * (0 - c2));
+                                    // double My = Ay + (t * (By - Ay));
+                                    // double Ny = By + (t * (Cy - By));
+                                    // return //My + (t * ((By + (t * ((c2 + (t * (0 - c2))) - By))) - My));
+                                }
+
+                                Commented out stuff is the long version of the quadratic bezier equation
+
+DUDE!  Bezier curves don't look like they double in calculations every step.  It looks like they only gain a little bit faster than arithmetically.  Something like:
+3 nodes = 2 + 1 = 3 points being tracked
+4 nodes = 3 + 2 + 1 = 6 points being tracked
+5 nodes = 4 + 3 + 2 + 1 = 10 points being tracked...
+etc.
+
+If they only gain that quickly in calculations, then we could do super complicated stuff serverside pretty easily...  Unless I am missing something. -GJ
+    --> Yeah your rite with every extra point the number of calculation can be represented like so:
+            numberOfCalc = 0;
+            n = numberOfPoints-1;
+            while(n > 0) { numberOfCalc += n--; }
+            return numberOfCalc;
+
+        I figure that if we are going to allow for such long curves, because bezier runs on a value between 0 and 1, we will need to estimate the amount
+        of blocks along the curve. Easiest and closest would be to add up the distances between the points from point A to Z than we could get a 't'
+        iteration value by doing 1/overallDistanceBetweenPoints and that should be fairly close and smooth and if we dont want to find EVERY block we
+        can simply divine overallDistanceBetweenPoint by the amount of blocks we want to use. I would propose making this value dynamic, for example:
+        If we have a river algrithem / brush than it also has a size so therefore if that value is dynamic we can do this:
+        very begining would be overallDist / 1 ( so every block on the line ) and 1 is the size of that brush
+        with every next node we should increase 1 by a certain value like 0.1 so after 10 blocks the river would widen by one size
+        And also with this very first change of size the number of further needed calculation would be reduced in HALF! ( overallDist / 2 )
+        and so on with each further size it would reduce the number of calculations untill the End of the Line was reached
+
+
+        The River Brush --
+        ( Algrithem )
+
+        Two points are selected
+        we get a slope between the two points
+        a channel ( line ) is cut between the two points
+        like a cylinder layed on its side so it would be round + depth of the width
+        Post processing would roughen up the canal on the bed and sides with either another algrithem or something preset
+        Best choice would be a combination of bolth algrithem and preset + randomization
+        Why I choose this way is because since its a cylinder it will also cut into cliffs and walls, like a river would
+        And the post processing of the canal would roughen up the entire area of what was cut out ( and beyond that on ocasion )
+        Imagine this as a minature version of the coast brush, sortof
+
+
+note : create a linkList for the river nodes
+        when we encounter a lake too big, or any lake perhaps, we note the Y point where it gave up and than since a river flows DOWN
+        we can backtrack our nodes until we reach a node with Y level of where it gave up and there our Lake node would be made
+        this will work for going down caves aswell but we will need to approach caves a bit different, if it gets to cave depth limit
+        it should fill UP from there, up backwards that  is cuz just UP could lead to other parts of cave and when the filled cave
+        finds a breach for the river to flow or gets filled up to the limit we repeat the above to get the node where the lake begins.
+
+        On a second thought, if we reach the lake limit we dont need to try to erode the ground we can just leave the lake as is
+        afterall there is lakes in mountains and other places that dont have a connection to the ocean
+
+mrrr, cylinders = straight = not riverlike.  I still like a series of ball brushes following the curve. -GJ
+    --> the cylinders would only be between points and they would be chamfered cylinders if possible because if they were flat at the end on sharper
+        turns the river wouldnt connect
+        besides spheres wouldnt work, unless you made them REALLY close.
+        If you had a sphere of diameter 5 and spaced the points 5 blocks apart it would leave a ^ at the point in between -- prz
+        --> spheres plus erode, yo.
+            --> wouldnt a line between the points + post processing be better? specially that erode would make it all look the same on the entirety of the river -- prz
+                --> what sort of post processing?
+                    --> read above The River Brush (Algrithem)
+                        but basically adding and subtracting either preset shapes or
+                        randomized shapes along the area of affection of the 'line' that was cut between the two points

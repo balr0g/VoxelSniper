@@ -1,0 +1,11 @@
+
+
+Please keep this organised lads, the other one is hard to navigate.
+Just stick to small notes, I guess. Maybe think of it as a changelog.
+
+ - TreeSnipe now works properly. Fed the Location constructor integers instead of doubles. :/ -- DR
+ - Erode undo seems to be partially broken.
+    --> I can fix that but it can, likely will, slow it down a tad. But I might be able to do it fast -- prz
+        --> Fixed the undo, and I think that I accidentally made it faster when it does multiple recursions -- prz
+ - Thoughts and opinions on expanding the Brush class to accept / differentiate between left/right clicks? -- prz
+        --> I am skeptical of including anything on left click.  It is nice to be able to fly around with an arrow in hand and not be paranoid about blowing huge craters in the world whenever you do anything.  If you want to add extra functions, I suggest a third item instead, if anything (arrow, gunpowder, and [blah]), like a green record? -GJ
