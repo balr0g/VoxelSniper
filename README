@@ -1,0 +1,11 @@
+Welcome to our public repository of VoxelSniper!
+
+Want to pitch in? Fork this repository and start coding!
+
+Requirements
+-------------
+1.) We request that you use NetBeans. You can code with Eclipse or IntelliJ, but we like to standardize our IDE.
+2.) Pull requests will be scrutinized. We want to keep our code as efficient and powerful as possible.
+3.) New commits are limited to the Brushes and Performers. Any other changes on anything else will be ignored (only our VoxelSniper contributors can edit those. Who are they? Check out the wiki).
+4.) Got questions? Ask it on our forums! http://thevoxelbox.com/forum/minecraft-mods-plugins/
+5.) Have fun!
