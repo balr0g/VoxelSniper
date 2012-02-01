@@ -52,24 +52,24 @@ public class vPainting {
 
         AxisAlignedBB bb = AxisAlignedBB.a(Math.min(x1, x2), y1, Math.min(z1, z2), Math.max(x1, x2), y2, Math.max(z1, z2));
 
-        List entities = craftWorld.getHandle().b(((CraftPlayer) p).getHandle(), bb);
+        List entities = craftWorld.getHandle().getEntities(((CraftPlayer) p).getHandle(), bb);
         if ((entities.size() == 1) && ((entities.get(0) instanceof EntityPainting))) {
             EntityPainting oldPainting = (EntityPainting) entities.get(0);
-            EntityPainting newPainting = new EntityPainting(craftWorld.getHandle(), oldPainting.b, oldPainting.c, oldPainting.d, oldPainting.a % 4);
+            EntityPainting newPainting = new EntityPainting(craftWorld.getHandle(), oldPainting.x, oldPainting.y, oldPainting.z, oldPainting.direction % 4);
 
-            newPainting.e = oldPainting.e;
+            newPainting.art = oldPainting.art;
             oldPainting.dead = true;
 
             if (auto) {
-                int i = (paintings.indexOf(newPainting.e) + (back ? -1 : 1) + paintings.size()) % paintings.size();
-                newPainting.e = (paintings.get(i));
-                newPainting.b(newPainting.a);
+                int i = (paintings.indexOf(newPainting.art) + (back ? -1 : 1) + paintings.size()) % paintings.size();
+                newPainting.art = (paintings.get(i));
+                newPainting.setDirection(newPainting.direction);
                 newPainting.world.addEntity(newPainting);
                 p.sendMessage(ChatColor.GREEN + "Painting set to ID: " + (i));
             } else {
                 try {
-                    newPainting.e = (paintings.get(choice));
-                    newPainting.b(newPainting.a);
+                    newPainting.art = (paintings.get(choice));
+                    newPainting.setDirection(newPainting.direction);
                     newPainting.world.addEntity(newPainting);
                     p.sendMessage(ChatColor.GREEN + "Painting set to ID: " + choice);
                 } catch (Exception e) {
